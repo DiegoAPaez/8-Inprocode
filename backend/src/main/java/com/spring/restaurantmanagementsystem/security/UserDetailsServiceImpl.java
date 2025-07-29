@@ -2,6 +2,7 @@ package com.spring.restaurantmanagementsystem.security;
 
 import com.spring.restaurantmanagementsystem.model.User;
 import com.spring.restaurantmanagementsystem.repository.UserRepository;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
 @Service
+@Primary
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
