@@ -1,5 +1,6 @@
 package com.spring.restaurantmanagementsystem.controller;
 
+import com.spring.restaurantmanagementsystem.dto.ChangePasswordRequest;
 import com.spring.restaurantmanagementsystem.dto.CreateUserRequest;
 import com.spring.restaurantmanagementsystem.dto.UpdateUserRequest;
 import com.spring.restaurantmanagementsystem.dto.UserDto;
@@ -10,7 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -45,5 +48,17 @@ public class AdminController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Map<String, String>> changeUserPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        adminService.changeUserPassword(id, request);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password updated successfully");
+        return ResponseEntity.ok(response);
     }
 }

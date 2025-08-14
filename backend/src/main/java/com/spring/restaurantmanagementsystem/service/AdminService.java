@@ -1,5 +1,6 @@
 package com.spring.restaurantmanagementsystem.service;
 
+import com.spring.restaurantmanagementsystem.dto.ChangePasswordRequest;
 import com.spring.restaurantmanagementsystem.dto.CreateUserRequest;
 import com.spring.restaurantmanagementsystem.dto.UpdateUserRequest;
 import com.spring.restaurantmanagementsystem.dto.UserDto;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import static java.util.stream.Collectors.toSet;
@@ -71,7 +73,9 @@ public class AdminService {
             }
 
             if (role != null && !role.isBlank()) {
-                user.setRoles(Set.of(getRoleByName(role)));
+                Set<Role> roles = new HashSet<>();
+                roles.add(getRoleByName(role));
+                user.setRoles(roles);
             }
         }
 
@@ -85,6 +89,25 @@ public class AdminService {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
         userRepository.deleteById(userId);
+    }
+
+    @Transactional
+    public void changeUserPassword(Long userId, ChangePasswordRequest request) {
+        // Validate password confirmation
+        if (!request.isNewPasswordConfirmed()) {
+            throw new IllegalArgumentException("New password and confirmation do not match");
+        }
+
+        // Find user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // For admin changes, we might skip current password validation
+        // Or implement current password check if required
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 
     private void validateUniqueUserData(String username, String email, Long excludeUserId) {
