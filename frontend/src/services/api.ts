@@ -1,49 +1,80 @@
-import axios from 'axios';
-import type {LoginRequest, LoginResponse, UserDetailsResponse} from '../types/auth';
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
+import type {
+  LoginRequest,
+  LoginResponse,
+  UserDetailsResponse,
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  ChangePasswordRequest
+} from '../types/auth';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
-// Configure axios to include credentials (cookies) in requests
-axios.defaults.withCredentials = true;
+class TypedApiClient {
+  private client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: API_BASE_URL,
+      withCredentials: true,
+    });
+  }
+
+  async get<T>(url: string): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.get(url);
+    return response.data;
+  }
+
+  async post<T>(url: string, data?: unknown): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.post(url, data);
+    return response.data;
+  }
+
+  async put<T>(url: string, data?: unknown): Promise<T> {
+    const response: AxiosResponse<T> = await this.client.put(url, data);
+    return response.data;
+  }
+
+  async delete(url: string): Promise<void> {
+    await this.client.delete(url);
+  }
+}
+
+const apiClient = new TypedApiClient();
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials);
-    return response.data;
+    return apiClient.post<LoginResponse>('/auth/login', credentials);
   },
 
   getCurrentUser: async (): Promise<UserDetailsResponse> => {
-    const response = await axios.get(`${API_BASE_URL}/auth/me`);
-    return response.data;
+    return apiClient.get<UserDetailsResponse>('/auth/me');
   },
 
   logout: async (): Promise<void> => {
-    await axios.post(`${API_BASE_URL}/auth/logout`);
+    await apiClient.post('/auth/logout');
   }
 };
 
 export const adminApi = {
-  getAllUsers: async () => {
-    const response = await axios.get(`${API_BASE_URL}/admin/users`);
-    return response.data;
+  getAllUsers: async (): Promise<User[]> => {
+    return apiClient.get<User[]>('/admin/users');
   },
 
-  createUser: async (userData: any) => {
-    const response = await axios.post(`${API_BASE_URL}/admin/users`, userData);
-    return response.data;
+  createUser: async (userData: CreateUserRequest): Promise<User> => {
+    return apiClient.post<User>('/admin/users', userData);
   },
 
-  updateUser: async (id: number, userData: any) => {
-    const response = await axios.put(`${API_BASE_URL}/admin/users/${id}`, userData);
-    return response.data;
+  updateUser: async (id: number, userData: UpdateUserRequest): Promise<User> => {
+    return apiClient.put<User>(`/admin/users/${id.toString()}`, userData);
   },
 
-  changeUserPassword: async (id: number, passwordData: any) => {
-    const response = await axios.put(`${API_BASE_URL}/admin/users/${id}/password`, passwordData);
-    return response.data;
+  changeUserPassword: async (id: number, passwordData: ChangePasswordRequest): Promise<void> => {
+    await apiClient.put(`/admin/users/${id.toString()}/password`, passwordData);
   },
 
-  deleteUser: async (id: number) => {
-    await axios.delete(`${API_BASE_URL}/admin/users/${id}`);
+  deleteUser: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/users/${id.toString()}`);
   }
 };

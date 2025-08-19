@@ -24,3 +24,38 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   checkAuthStatus: () => Promise<void>;
 }
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  roles: Role[];
+}
+
+export interface Role {
+  id: number;
+  name: string;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  roles: string[];
+}
+
+export interface UpdateUserRequest {
+  username: string;
+  email: string;
+  role: string;
+}
+
+export interface ChangePasswordRequest {
+  newPassword: string;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  status?: number;
+}

@@ -33,7 +33,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       onClose();
       alert('Password updated successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Failed to change password:', error);
       alert('Failed to change password. Please try again.');
     }
@@ -89,7 +89,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               required
               minLength={6}
               value={form.newPassword}
-              onChange={(e) => setForm(prev => ({ ...prev, newPassword: e.target.value }))}
+              onChange={(e) => {
+                  setForm(prev => {
+                      return ({...prev, newPassword: e.target.value});
+                  });
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
               placeholder="Enter new password (min 6 characters)"
             />
@@ -103,7 +107,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               type={showPasswords ? "text" : "password"}
               required
               value={form.confirmPassword}
-              onChange={(e) => setForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              onChange={(e) => {
+                  setForm(prev => {
+                      return ({...prev, confirmPassword: e.target.value});
+                  });
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
               placeholder="Confirm new password"
             />
@@ -114,7 +122,9 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               type="checkbox"
               id="showPasswords"
               checked={showPasswords}
-              onChange={(e) => setShowPasswords(e.target.checked)}
+              onChange={(e) => {
+                  setShowPasswords(e.target.checked);
+              }}
               className="mr-2"
             />
             <label htmlFor="showPasswords" className="text-sm text-gray-600">
