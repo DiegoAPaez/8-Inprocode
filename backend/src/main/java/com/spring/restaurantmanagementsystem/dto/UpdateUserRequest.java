@@ -10,6 +10,8 @@ public record UpdateUserRequest(
         @Email(message = "Email should be valid")
         String email,
 
-        String role
+        String role,
+
+        Long storeId  // Optional field to update user's store assignment
 ) {
 }

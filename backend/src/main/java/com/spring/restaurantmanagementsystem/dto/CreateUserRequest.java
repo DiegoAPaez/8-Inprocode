@@ -18,6 +18,8 @@ public record CreateUserRequest(
         String password,
 
         @NotBlank(message = "Role is required")
-        String role
+        String role,
+
+        Long storeId  // Optional field to assign user to a store
 ) {
 }

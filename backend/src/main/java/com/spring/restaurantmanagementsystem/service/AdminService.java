@@ -2,13 +2,16 @@ package com.spring.restaurantmanagementsystem.service;
 
 import com.spring.restaurantmanagementsystem.dto.ChangePasswordRequest;
 import com.spring.restaurantmanagementsystem.dto.CreateUserRequest;
+import com.spring.restaurantmanagementsystem.dto.StoreDto;
 import com.spring.restaurantmanagementsystem.dto.UpdateUserRequest;
 import com.spring.restaurantmanagementsystem.dto.UserDto;
 import com.spring.restaurantmanagementsystem.exception.ResourceNotFoundException;
 import com.spring.restaurantmanagementsystem.model.Role;
 import com.spring.restaurantmanagementsystem.model.RoleEnum;
+import com.spring.restaurantmanagementsystem.model.Store;
 import com.spring.restaurantmanagementsystem.model.User;
 import com.spring.restaurantmanagementsystem.repository.RoleRepository;
+import com.spring.restaurantmanagementsystem.repository.StoreRepository;
 import com.spring.restaurantmanagementsystem.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,11 +26,14 @@ import static java.util.stream.Collectors.toSet;
 public class AdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final StoreRepository storeRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AdminService(UserRepository userRepository, RoleRepository roleRepository,
+                       StoreRepository storeRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.storeRepository = storeRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,7 +46,7 @@ public class AdminService {
 
     @Transactional
     public UserDto createUser(CreateUserRequest request) {
-        if (request instanceof CreateUserRequest(var username, var email, var password, var role)) {
+        if (request instanceof CreateUserRequest(var username, var email, var password, var role, var storeId)) {
             validateUniqueUserData(username, email, null);
 
             User user = new User();
@@ -48,6 +54,13 @@ public class AdminService {
             user.setEmail(email);
             user.setPassword(passwordEncoder.encode(password));
             user.setRoles(Set.of(getRoleByName(role)));
+
+            // Handle store assignment
+            if (storeId != null) {
+                Store store = storeRepository.findById(storeId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
+                user.setStore(store);
+            }
 
             User savedUser = userRepository.save(user);
             return convertToDto(savedUser);
@@ -61,7 +74,7 @@ public class AdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         // Using pattern matching with records
-        if (request instanceof UpdateUserRequest(var username, var email, var role)) {
+        if (request instanceof UpdateUserRequest(var username, var email, var role, var storeId)) {
             if (username != null && !username.isBlank()) {
                 validateUniqueUserData(username, null, userId);
                 user.setUsername(username);
@@ -76,6 +89,18 @@ public class AdminService {
                 Set<Role> roles = new HashSet<>();
                 roles.add(getRoleByName(role));
                 user.setRoles(roles);
+            }
+
+            // Handle store assignment update
+            if (storeId != null) {
+                if (storeId == 0) {
+                    // If storeId is 0, remove store assignment
+                    user.setStore(null);
+                } else {
+                    Store store = storeRepository.findById(storeId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
+                    user.setStore(store);
+                }
             }
         }
 
@@ -139,13 +164,25 @@ public class AdminService {
     }
 
     private UserDto convertToDto(User user) {
+        StoreDto storeDto = null;
+        if (user.getStore() != null) {
+            Store store = user.getStore();
+            storeDto = new StoreDto(
+                    store.getId(),
+                    store.getName(),
+                    store.getLatitude(),
+                    store.getLongitude()
+            );
+        }
+
         return new UserDto(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getRoles().stream()
                         .map(role -> role.getName().name())
-                        .collect(toSet())
+                        .collect(toSet()),
+                storeDto
         );
     }
 }
