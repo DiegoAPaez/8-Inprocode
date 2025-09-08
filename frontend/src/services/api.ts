@@ -8,6 +8,11 @@ import type {
   UpdateUserRequest,
   ChangePasswordRequest
 } from '../types/auth';
+import type {
+  Store,
+  CreateStoreRequest,
+  UpdateStoreRequest
+} from '../types/store';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -76,5 +81,30 @@ export const adminApi = {
 
   deleteUser: async (id: number): Promise<void> => {
     await apiClient.delete(`/admin/users/${id.toString()}`);
+  },
+
+  // Store management functions
+  getAllStores: async (): Promise<Store[]> => {
+    return apiClient.get<Store[]>('/admin/stores');
+  },
+
+  getStoreById: async (id: number): Promise<Store> => {
+    return apiClient.get<Store>(`/admin/stores/${id.toString()}`);
+  },
+
+  createStore: async (storeData: CreateStoreRequest): Promise<Store> => {
+    return apiClient.post<Store>('/admin/stores', storeData);
+  },
+
+  updateStore: async (id: number, storeData: UpdateStoreRequest): Promise<Store> => {
+    return apiClient.put<Store>(`/admin/stores/${id.toString()}`, storeData);
+  },
+
+  deleteStore: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/stores/${id.toString()}`);
+  },
+
+  getUsersByStore: async (storeId: number): Promise<User[]> => {
+    return apiClient.get<User[]>(`/admin/stores/${storeId.toString()}/users`);
   }
 };

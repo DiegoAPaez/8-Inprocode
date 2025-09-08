@@ -3,25 +3,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import type {User} from "../../types/auth.ts";
+import type { Store } from "../../types/store.ts";
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  roles: string[];
-}
+// interface User {
+//   id: number;
+//   username: string;
+//   email: string;
+//   roles: string[];
+// }
 
 interface CreateUserForm {
   username: string;
   email: string;
   password: string;
   role: string;
+  storeId: string; // Empty string for no store, or store ID as string
 }
 
 interface UpdateUserForm {
   username: string;
   email: string;
   role: string;
+  storeId: string; // Empty string for no store, or store ID as string
 }
 
 export const ManageUsers: React.FC = () => {
@@ -33,12 +37,14 @@ export const ManageUsers: React.FC = () => {
     username: '',
     email: '',
     password: '',
-    role: 'ADMIN'
+    role: 'ADMIN',
+    storeId: '' // Default to no store
   });
   const [updateForm, setUpdateForm] = useState<UpdateUserForm>({
     username: '',
     email: '',
-    role: 'ADMIN'
+    role: 'ADMIN',
+    storeId: '' // Default to no store
   });
   const queryClient = useQueryClient();
 
@@ -59,20 +65,29 @@ export const ManageUsers: React.FC = () => {
     enabled: isAuthenticated, // Only fetch if user is authenticated
   });
 
+  // Fetch stores for dropdown selection
+  const { data: stores = [] } = useQuery<Store[]>({
+    queryKey: ['stores'],
+    queryFn: adminApi.getAllStores,
+    staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated,
+  });
+
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: (userData: CreateUserForm) => {
       // Transform single role to roles array for backend
       const payload = {
         ...userData,
-        roles: [userData.role]
+        roles: [userData.role],
+        storeId: userData.storeId === '' ? null : Number(userData.storeId)
       };
       return adminApi.createUser(payload);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowCreateForm(false);
-      setCreateForm({ username: '', email: '', password: '', role: 'ADMIN' });
+      setCreateForm({ username: '', email: '', password: '', role: 'ADMIN', storeId: '' });
     },
     onError: (error) => {
       console.error('Failed to create user:', error);
@@ -82,12 +97,16 @@ export const ManageUsers: React.FC = () => {
   // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: ({ id, userData }: { id: number; userData: UpdateUserForm }) => {
-      return adminApi.updateUser(id, userData);
+      const payload = {
+        ...userData,
+        storeId: userData.storeId === '' ? null : Number(userData.storeId)
+      };
+      return adminApi.updateUser(id, payload);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditingUser(null);
-      setUpdateForm({ username: '', email: '', role: 'ADMIN' });
+      setUpdateForm({ username: '', email: '', role: 'ADMIN', storeId: '' });
     },
     onError: (error) => {
       console.error('Failed to update user:', error);
@@ -122,14 +141,18 @@ export const ManageUsers: React.FC = () => {
     setUpdateForm({
       username: userToEdit.username,
       email: userToEdit.email,
-      role: userToEdit.roles[0] || 'ADMIN' // Take first role
+      // Handle both string array and object array formats for roles
+      role: typeof userToEdit.roles[0] === 'string'
+        ? userToEdit.roles[0] as string
+        : userToEdit.roles[0]?.name || 'ADMIN',
+      storeId: userToEdit.store?.id?.toString() || '' // Use store.id from the nested store object
     });
     setShowCreateForm(false); // Close create form if open
   };
 
   const handleCancelEdit = () => {
     setEditingUser(null);
-    setUpdateForm({ username: '', email: '', role: 'ADMIN' });
+    setUpdateForm({ username: '', email: '', role: 'ADMIN', storeId: '' });
   };
 
   const handleDeleteUser = (id: number) => {
@@ -251,6 +274,21 @@ export const ManageUsers: React.FC = () => {
                 <option value="WAITER">Waiter</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Store</label>
+              <select
+                value={createForm.storeId}
+                onChange={(e) => { setCreateForm(prev => ({ ...prev, storeId: e.target.value })); }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
+              >
+                <option value="">No Store</option>
+                {stores.map(store => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="col-span-2">
               <button
                 type="submit"
@@ -301,6 +339,21 @@ export const ManageUsers: React.FC = () => {
                 <option value="WAITER">Waiter</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Store</label>
+              <select
+                value={updateForm.storeId}
+                onChange={(e) => { setUpdateForm(prev => ({ ...prev, storeId: e.target.value })); }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
+              >
+                <option value="">No Store</option>
+                {stores.map(store => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex space-x-3">
               <button
                 type="submit"
@@ -336,6 +389,9 @@ export const ManageUsers: React.FC = () => {
                 Email
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Store
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Roles
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -349,13 +405,24 @@ export const ManageUsers: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {user.store ? (
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      {user.store.name}
+                    </span>
+                  ) : (
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      No Store
+                    </span>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {user.roles.map(role => (
+                  {user.roles.map((role, index) => (
                     <span
-                      key={role}
+                      key={typeof role === 'string' ? role : role.name || index}
                       className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mr-1"
                     >
-                      {role}
+                      {typeof role === 'string' ? role : role.name}
                     </span>
                   ))}
                 </td>
