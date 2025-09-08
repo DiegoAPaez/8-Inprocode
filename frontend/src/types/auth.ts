@@ -30,6 +30,12 @@ export interface User {
   username: string;
   email: string;
   roles: Role[];
+  store?: {
+    id: number;
+    name: string;
+    latitude: number;
+    longitude: number;
+  } | null;
 }
 
 export interface Role {
@@ -42,12 +48,14 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   roles: string[];
+  storeId?: number | null;
 }
 
 export interface UpdateUserRequest {
   username: string;
   email: string;
   role: string;
+  storeId?: number | null;
 }
 
 export interface ChangePasswordRequest {
