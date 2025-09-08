@@ -77,8 +77,8 @@ public class AdminControllerTest {
     @DisplayName("Should return a list of users when getAllUsers is called")
     void getAllUsers_ShouldReturnListOfUsers() throws Exception {
         // Arrange
-        UserDto user1 = new UserDto(1L, "admin", "admin@mail.com", Set.of("ADMIN"));
-        UserDto user2 = new UserDto(2L, "user", "user@mail.com", Set.of("WAITER"));
+        UserDto user1 = new UserDto(1L, "admin", "admin@mail.com", Set.of("ADMIN"), null);
+        UserDto user2 = new UserDto(2L, "user", "user@mail.com", Set.of("WAITER"), null);
         List<UserDto> userList = List.of(user1, user2);
 
         // Configure mock behavior: when adminService.getAllUsers() is called, return our list
@@ -105,8 +105,8 @@ public class AdminControllerTest {
     @DisplayName("Should create a user and return CREATED status on valid request")
     void createUser_ShouldCreateAndReturnUserDto() throws Exception {
         // Arrange
-        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER");
-        UserDto createdUserDto = new UserDto(3L, "newUser", "new@user.com", Set.of("WAITER"));
+        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER", null);
+        UserDto createdUserDto = new UserDto(3L, "newUser", "new@user.com", Set.of("WAITER"), null);
 
         // Configure mock behavior: when adminService.createUser is called with any CreateUserRequest, return our DTO
         when(adminService.createUser(any(CreateUserRequest.class))).thenReturn(createdUserDto);
@@ -135,8 +135,8 @@ public class AdminControllerTest {
     void updateUser_ShouldUpdateAndReturnUserDto() throws Exception {
         // Arrange
         Long userId = 1L;
-        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN");
-        UserDto updatedUserDto = new UserDto(userId, "updatedUser", "updated@user.com", Set.of("ADMIN"));
+        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN", null);
+        UserDto updatedUserDto = new UserDto(userId, "updatedUser", "updated@user.com", Set.of("ADMIN"), null);
 
         // Configure mock behavior: when adminService.updateUser is called with specific ID and any UpdateUserRequest, return our DTO
         when(adminService.updateUser(eq(userId), any(UpdateUserRequest.class))).thenReturn(updatedUserDto);
