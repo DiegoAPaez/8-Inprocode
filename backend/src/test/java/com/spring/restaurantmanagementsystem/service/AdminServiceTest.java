@@ -6,8 +6,10 @@ import com.spring.restaurantmanagementsystem.dto.UserDto;
 import com.spring.restaurantmanagementsystem.exception.ResourceNotFoundException;
 import com.spring.restaurantmanagementsystem.model.Role;
 import com.spring.restaurantmanagementsystem.model.RoleEnum;
+import com.spring.restaurantmanagementsystem.model.Store;
 import com.spring.restaurantmanagementsystem.model.User;
 import com.spring.restaurantmanagementsystem.repository.RoleRepository;
+import com.spring.restaurantmanagementsystem.repository.StoreRepository;
 import com.spring.restaurantmanagementsystem.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ public class AdminServiceTest {
     private RoleRepository roleRepository;
 
     @Mock
+    private StoreRepository storeRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
@@ -66,6 +71,16 @@ public class AdminServiceTest {
         user.setPassword(password);
         user.setRoles(roles);
         return user;
+    }
+
+    // Helper method to create a mock Store object
+    private Store createStore(Long id, String name, Double latitude, Double longitude) {
+        Store store = new Store();
+        store.setId(id);
+        store.setName(name);
+        store.setLatitude(latitude);
+        store.setLongitude(longitude);
+        return store;
     }
 
     /**
@@ -129,7 +144,7 @@ public class AdminServiceTest {
     @DisplayName("Should create and return UserDto on successful user creation")
     void createUser_ShouldCreateAndReturnUserDto() {
         // Arrange
-        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER");
+        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER", 1L);
         Role userRole = createRole(RoleEnum.WAITER);
         User savedUser = createUser(1L, "newUser", "new@user.com", "encodedPassword", Set.of(userRole));
 
@@ -139,6 +154,7 @@ public class AdminServiceTest {
         when(roleRepository.findByName(RoleEnum.WAITER)).thenReturn(Optional.of(userRole));
         when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(createStore(1L, "Test Store", 40.7128, -74.0060)));
 
         // Act
         UserDto result = adminService.createUser(request);
@@ -165,7 +181,7 @@ public class AdminServiceTest {
     @DisplayName("Should throw IllegalArgumentException when username already exists during creation")
     void createUser_UsernameExists_ThrowsException() {
         // Arrange
-        CreateUserRequest request = new CreateUserRequest("existingUser", "new@user.com", "password123", "WAITER");
+        CreateUserRequest request = new CreateUserRequest("existingUser", "new@user.com", "password123", "WAITER", 1L);
 
         // Mock userRepository to indicate username exists
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
@@ -192,7 +208,7 @@ public class AdminServiceTest {
     @DisplayName("Should throw IllegalArgumentException when email already exists during creation")
     void createUser_EmailExists_ThrowsException() {
         // Arrange
-        CreateUserRequest request = new CreateUserRequest("newUser", "existing@user.com", "password123", "WAITER");
+        CreateUserRequest request = new CreateUserRequest("newUser", "existing@user.com", "password123", "WAITER", 1L);
 
         // Mock userRepository to indicate email exists
         when(userRepository.existsByUsername(request.username())).thenReturn(false); // Username is fine
@@ -221,7 +237,7 @@ public class AdminServiceTest {
     void createUser_RoleValidButNotFoundInRepo_ThrowsException() {
         // Arrange
         // Use a valid role name that exists in RoleEnum, but mock its absence in the repository
-        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER");
+        CreateUserRequest request = new CreateUserRequest("newUser", "new@user.com", "password123", "WAITER", 1L);
 
         // Mock dependencies
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
@@ -252,11 +268,13 @@ public class AdminServiceTest {
     void updateUser_AllFields_ShouldUpdateAndReturnUserDto() {
         // Arrange
         Long userId = 1L;
-        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN");
+        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN", 1L);
         Role originalRole = createRole(RoleEnum.WAITER);
         User existingUser = createUser(userId, "originalUser", "original@user.com", "oldPass", Set.of(originalRole));
         Role newRole = createRole(RoleEnum.ADMIN);
-        User updatedUser = createUser(userId, "updatedUser", "updated@user.com", "oldPass", Set.of(newRole)); // Simulate updated user
+        Store testStore = createStore(1L, "Test Store", 40.7128, -74.0060);
+        User updatedUser = createUser(userId, "updatedUser", "updated@user.com", "oldPass", Set.of(newRole));
+        updatedUser.setStore(testStore);
 
         // Mock dependencies
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
@@ -264,6 +282,7 @@ public class AdminServiceTest {
         when(userRepository.existsByEmailAndIdNot(request.email(), userId)).thenReturn(false);
         when(roleRepository.findByName(RoleEnum.ADMIN)).thenReturn(Optional.of(newRole));
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(createStore(1L, "Test Store", 40.7128, -74.0060)));
 
         // Act
         UserDto result = adminService.updateUser(userId, request);
@@ -292,7 +311,7 @@ public class AdminServiceTest {
     void updateUser_OnlyUsername_ShouldUpdateUserDto() {
         // Arrange
         Long userId = 1L;
-        UpdateUserRequest request = new UpdateUserRequest("onlyUsernameUpdated", null, null); // Only username
+        UpdateUserRequest request = new UpdateUserRequest("onlyUsernameUpdated", null, null , null); // Only username
         Role originalRole = createRole(RoleEnum.WAITER);
         User existingUser = createUser(userId, "originalUser", "original@user.com", "oldPass", Set.of(originalRole));
         User updatedUser = createUser(userId, "onlyUsernameUpdated", "original@user.com", "oldPass", Set.of(originalRole));
@@ -329,7 +348,7 @@ public class AdminServiceTest {
     void updateUser_UserNotFound_ThrowsException() {
         // Arrange
         Long userId = 99L;
-        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN");
+        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN", null);
 
         // Mock userRepository to return empty Optional (user not found)
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
@@ -357,7 +376,7 @@ public class AdminServiceTest {
     void updateUser_UsernameConflict_ThrowsException() {
         // Arrange
         Long userId = 1L;
-        UpdateUserRequest request = new UpdateUserRequest("anotherExistingUser", "updated@user.com", "ADMIN");
+        UpdateUserRequest request = new UpdateUserRequest("anotherExistingUser", "updated@user.com", "ADMIN", null);
         Role originalRole = createRole(RoleEnum.WAITER);
         User existingUser = createUser(userId, "originalUser", "original@user.com", "oldPass", Set.of(originalRole));
 
@@ -389,7 +408,7 @@ public class AdminServiceTest {
     void updateUser_EmailConflict_ThrowsException() {
         // Arrange
         Long userId = 1L;
-        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "anotherExisting@user.com", "ADMIN");
+        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "anotherExisting@user.com", "ADMIN", null);
         Role originalRole = createRole(RoleEnum.WAITER);
         User existingUser = createUser(userId, "originalUser", "original@user.com", "oldPass", Set.of(originalRole));
 
@@ -423,7 +442,7 @@ public class AdminServiceTest {
         // Arrange
         Long userId = 1L;
         // Use a valid role name that exists in RoleEnum, but mock its absence in the repository
-        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN");
+        UpdateUserRequest request = new UpdateUserRequest("updatedUser", "updated@user.com", "ADMIN", null);
         Role originalRole = createRole(RoleEnum.WAITER);
         User existingUser = createUser(userId, "originalUser", "original@user.com", "oldPass", Set.of(originalRole));
 
