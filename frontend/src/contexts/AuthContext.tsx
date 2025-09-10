@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { AuthContextType, LoginRequest, UserDetailsResponse } from '../types/auth';
 import { authApi } from '../services/api';
-import { getJWTFromCookie } from '../utils/auth';
+import { getJWTFromCookie, clearJWTCookie } from '../utils/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -81,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Always clear the cookie on frontend, regardless of backend response
+      clearJWTCookie();
       setUser(null);
       setHasCheckedAuth(false); // Reset so we can check auth again later
     }

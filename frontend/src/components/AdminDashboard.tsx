@@ -4,10 +4,11 @@ import {ManageUsers} from './admin/ManageUsers';
 import {ManageMenu} from './admin/ManageMenu';
 import {ManageData} from './admin/ManageData';
 import {ManageStores} from './admin/ManageStores';
+import {ManageSchedule} from "./admin/ManageSchedule.tsx";
 
 export const AdminDashboard: React.FC = () => {
     const {user, logout} = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'menu' | 'data' | 'stores'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'menu' | 'data' | 'stores' | 'schedule'>('users');
 
     const handleLogout = async () => {
         try {
@@ -21,7 +22,8 @@ export const AdminDashboard: React.FC = () => {
         {id: 'users' as const, label: 'Manage Users', icon: '👥'},
         {id: 'menu' as const, label: 'Manage Menu', icon: '🍽️'},
         {id: 'data' as const, label: 'Manage Data', icon: '📊'},
-        {id: 'stores' as const, label: 'Manage Stores', icon: '🏪'}
+        {id: 'stores' as const, label: 'Manage Stores', icon: '🏪'},
+        {id: 'schedule' as const, label: 'Manage Schedule', icon: '📅'}
     ];
 
     const renderActiveTab = () => {
@@ -34,6 +36,8 @@ export const AdminDashboard: React.FC = () => {
                 return <ManageData/>;
             case 'stores':
                 return <ManageStores/>;
+            case 'schedule':
+                return <ManageSchedule/>;
             default:
                 return <ManageUsers/>;
         }
