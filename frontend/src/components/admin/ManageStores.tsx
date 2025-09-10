@@ -85,7 +85,7 @@ export const ManageStores: React.FC = () => {
             container: mapContainer.current,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [0, 0], // Default center
-            zoom: 2
+            zoom: 0
         });
 
         // Wait for map to load before setting loaded state
@@ -328,7 +328,7 @@ export const ManageStores: React.FC = () => {
 
             {/* Create Store Modal */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Store</h3>
 
@@ -421,7 +421,7 @@ export const ManageStores: React.FC = () => {
 
             {/* Edit Store Modal */}
             {isEditModalOpen && selectedStore && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Store</h3>
                         <form onSubmit={handleUpdateStore} className="space-y-4">
@@ -502,7 +502,7 @@ export const ManageStores: React.FC = () => {
 
             {/* Store Users Modal */}
             {isUsersModalOpen && selectedStore && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             Users at {selectedStore.name}
