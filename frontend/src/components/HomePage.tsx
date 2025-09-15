@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
-import { AdminDashboard } from './AdminDashboard';
+import { AdminDashboard } from './admin/AdminDashboard.tsx';
 
 export const HomePage: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();

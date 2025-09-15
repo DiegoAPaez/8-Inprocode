@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
-import {useAuth} from '../contexts/AuthContext';
-import {ManageUsers} from './admin/ManageUsers';
-import {ManageMenu} from './admin/ManageMenu';
-import {ManageData} from './admin/ManageData';
-import {ManageStores} from './admin/ManageStores';
-import {ManageSchedule} from "./admin/ManageSchedule.tsx";
+import {useAuth} from '../../contexts/AuthContext.tsx';
+import {ManageUsers} from './users/ManageUsers.tsx';
+import {ManageMenu} from './menu/ManageMenu.tsx';
+import {ManageData} from './data/ManageData.tsx';
+import {ManageStores} from './stores/ManageStores.tsx';
+import {ManageSchedule} from "./calendar/ManageSchedule.tsx";
 
 export const AdminDashboard: React.FC = () => {
     const {user, logout} = useAuth();
