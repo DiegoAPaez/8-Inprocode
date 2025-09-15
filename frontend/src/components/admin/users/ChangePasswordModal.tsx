@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { adminApi } from '../../services/api';
+import { adminApi } from '../../../services/api.ts';
 
 interface ChangePasswordModalProps {
   user: { id: number; username: string };
